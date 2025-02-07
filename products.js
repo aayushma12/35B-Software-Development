@@ -17,10 +17,11 @@ const flowers = [
     { name: 'Petunia', price: 'रु. 2,400.00', points: '24 Pts', imgSrc: 'Petunia.jpg' }
 ];
 
-function displayFlowers(flowers) {
+function displayFlowers() {
     const container = document.getElementById('cart-container');
     container.innerHTML = '';
-    flowers.forEach(flower => {
+
+    flowers.forEach((flower, index) => {
         const div = document.createElement('div');
         div.classList.add('cart-item');
         div.innerHTML = `
@@ -28,26 +29,71 @@ function displayFlowers(flowers) {
             <h3>${flower.name}</h3>
             <div class="price">${flower.price}</div>
             <div class="points">${flower.points}</div>
-            <a href="#" class="add-to-cart">Add to Cart</a>
-            <a href="#" class="buy-now">Buy Now</a>
-            <a href="#" class="wishlist">Add to Wishlist</a>
+            <button class="add-to-cart" data-index="${index}">Add to Cart</button>
+            <button class="buy-now">Buy Now</button>
+            <button class="wishlist">Add to Wishlist</button>
         `;
         container.appendChild(div);
     });
+
+    // Attach event listeners after elements are added to DOM
+    document.querySelectorAll('.add-to-cart').forEach(button => {
+        button.addEventListener('click', function () {
+            const flowerIndex = this.getAttribute('data-index');
+            addToCart(flowers[flowerIndex]);
+        });
+    });
 }
 
-function filterProducts() {
-    const searchQuery = document.getElementById('search-bar').value.toLowerCase();
-    const filteredFlowers = flowers.filter(flower => flower.name.toLowerCase().includes(searchQuery));
-    displayFlowers(filteredFlowers);
+function addToCart(flower) {
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+    cart.push(flower);
+    localStorage.setItem('cart', JSON.stringify(cart));
+    alert(`${flower.name} added to cart!`);
 }
 
-displayFlowers(flowers);
+function showCartItems() {
+    const cart = JSON.parse(localStorage.getItem('cart')) || [];
+    const cartPage = document.getElementById('cart-container');
+    cartPage.innerHTML = '';
 
-document.getElementById('logout-btn').addEventListener('click', function () {
-    const userConfirmed = confirm("Are you sure you want to log out?");
-
-    if (userConfirmed) {
-        window.location.href = "HomePage.html";
+    if (cart.length === 0) {
+        cartPage.innerHTML = '<p>Your cart is empty.</p>';
+        return;
     }
-});
+
+    cart.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.classList.add('cart-item');
+        div.innerHTML = `
+            <img src="${item.imgSrc}" alt="${item.name}">
+            <h3>${item.name}</h3>
+            <div class="price">${item.price}</div>
+            <div class="points">${item.points}</div>
+            <button class="remove-from-cart" data-index="${index}">Remove</button>
+        `;
+        cartPage.appendChild(div);
+    });
+
+    document.querySelectorAll('.remove-from-cart').forEach(button => {
+        button.addEventListener('click', function () {
+            const itemIndex = this.getAttribute('data-index');
+            removeFromCart(itemIndex);
+        });
+    });
+}
+
+function removeFromCart(index) {
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+    cart.splice(index, 1);
+    localStorage.setItem('cart', JSON.stringify(cart));
+    showCartItems();
+}
+
+// Run this only on cart page
+if (window.location.pathname.includes('cart.html')) {
+    showCartItems();
+}
+
+// Display products on page load
+displayFlowers();
